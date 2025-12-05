@@ -54,12 +54,8 @@ def save_memory(memory: dict):
     with open(MEMORY_FILE, "w") as f:
         json.dump(memory, f, indent=2)
 
-async def remember_fact(fact: str) -> str:
-    """Remember a fact about the user."""
-    print(f"🧠 Remembering: {fact}")
-    memory["facts"].append(fact)
-    await asyncio.to_thread(save_memory, memory)
-    return f"I'll remember that: {fact}"
+# Initialize memory
+memory = load_memory()
 
 async def log_conversation(role: str, content: str):
     """Log a conversation entry asynchronously."""
@@ -76,18 +72,6 @@ async def log_conversation(role: str, content: str):
             json.dump(conversation_log, f, indent=2)
             
     await asyncio.to_thread(_save_log)
-
-async def remember_fact(fact: str) -> str:
-    """Remember a fact about the user."""
-    print(f"🧠 Remembering: {fact}")
-    memory["facts"].append(fact)
-    
-    def _save_memory():
-        with open(MEMORY_FILE, "w") as f:
-            json.dump(memory, f, indent=2)
-            
-    await asyncio.to_thread(_save_memory)
-    return f"I'll remember that: {fact}
 
 async def web_search(query: str) -> str:
     """Perform a web search using SerpAPI (Google)."""
@@ -168,11 +152,16 @@ def get_current_time() -> str:
     """Get current date and time."""
     return datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
 
-def remember_fact(fact: str) -> str:
+async def remember_fact(fact: str) -> str:
     """Remember a fact about the user."""
     print(f"🧠 Remembering: {fact}")
     memory["facts"].append(fact)
-    save_memory(memory)
+    
+    def _save_memory():
+        with open(MEMORY_FILE, "w") as f:
+            json.dump(memory, f, indent=2)
+            
+    await asyncio.to_thread(_save_memory)
     return f"I'll remember that: {fact}"
 
 def recall_facts() -> str:
@@ -315,6 +304,19 @@ async def browser_scroll(direction: str) -> str:
     except Exception as e:
         return f"Scroll error: {str(e)}"
 
+async def browser_navigate(url: str) -> str:
+    """Navigate to a URL."""
+    await ensure_browser()
+    global page
+    if not page:
+        return "Error: Browser not initialized."
+    print(f"🌐 Navigating to: {url}")
+    try:
+        await page.goto(url)
+        return f"Navigated to {url}"
+    except Exception as e:
+        return f"Navigation error: {str(e)}"
+
 async def browser_back() -> str:
     """Go back."""
     await ensure_browser()
@@ -328,6 +330,70 @@ async def browser_back() -> str:
     except Exception as e:
         return f"Back error: {str(e)}"
 
+# Define tools for OpenAI Realtime API
+TOOLS = [
+    {
+        "type": "function",
+        "name": "web_search",
+        "description": "Search the web using Google for real-time information",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The search query"}
+            },
+            "required": ["query"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_current_time",
+        "description": "Get the current date and time",
+        "parameters": {"type": "object", "properties": {}}
+    },
+    {
+        "type": "function",
+        "name": "remember",
+        "description": "Remember a fact about the user for future conversations",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "fact": {"type": "string", "description": "The fact to remember"}
+            },
+            "required": ["fact"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "recall",
+        "description": "Recall all remembered facts about the user",
+        "parameters": {"type": "object", "properties": {}}
+    },
+    {
+        "type": "function",
+        "name": "generate_image",
+        "description": "Generate an image using DALL-E 3",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string", "description": "Description of the image to generate"}
+            },
+            "required": ["prompt"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "The URL to navigate to"}
+            },
+            "required": ["url"]
+        }
+    }
+]
+
 async def execute_tool(name: str, arguments: dict) -> str:
     """Execute a tool and return the result."""
     if name == "web_search":
@@ -335,7 +401,7 @@ async def execute_tool(name: str, arguments: dict) -> str:
     elif name == "get_current_time":
         return get_current_time()
     elif name == "remember":
-        return remember_fact(arguments.get("fact", ""))
+        return await remember_fact(arguments.get("fact", ""))
     elif name == "recall":
         return recall_facts()
     elif name == "generate_image":
@@ -376,6 +442,7 @@ async def ensure_browser():
 
 async def main():
     import websockets
+    from websockets.exceptions import ConnectionClosed
     global playwright, browser, page
     
     # Playwright initialized lazily on first use
