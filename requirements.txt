@@ -1,3 +1,4 @@
+# Whisper core dependencies
 numba
 numpy
 torch
@@ -5,3 +6,12 @@ tqdm
 more-itertools
 tiktoken
 triton>=2.0.0;platform_machine=="x86_64" and sys_platform=="linux" or sys_platform=="linux2"
+
+# Voice Agent dependencies (agent.py)
+openai
+python-dotenv
+google-search-results
+playwright
+sounddevice
+websockets
+httpx

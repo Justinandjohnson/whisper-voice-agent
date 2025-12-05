@@ -9,3 +9,10 @@ thumbs.db
 .DS_Store
 .idea
 
+# Environment variables
+.env
+
+# Voice agent data
+conversations/
+images/
+memory.json

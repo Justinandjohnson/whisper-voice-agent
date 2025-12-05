@@ -7,6 +7,49 @@
 
 Whisper is a general-purpose speech recognition model. It is trained on a large dataset of diverse audio and is also a multitasking model that can perform multilingual speech recognition, speech translation, and language identification.
 
+## 🎤 Voice Agent (NEW!)
+
+This repository includes an interactive voice agent (`agent.py`) powered by OpenAI's Realtime API that can:
+- 🗣️ Have natural voice conversations
+- 🔍 Search the web in real-time
+- 🧠 Remember facts about you
+- 🎨 Generate images with DALL-E
+- 🌐 Browse and interact with websites
+- 📸 Take screenshots
+
+### Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   playwright install chromium
+   ```
+
+2. **Set up environment variables:**
+   
+   Copy `.env.example` to `.env` and add your API keys:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and add:
+   - `OPENAI_API_KEY` - Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - `SERPAPI_KEY` - Get from [SerpAPI](https://serpapi.com/) (for web search)
+
+3. **Run the voice agent:**
+   ```bash
+   python3 agent.py
+   ```
+
+4. **Start talking!** The agent will greet you and respond to your voice commands.
+
+### Features
+- **Web Search**: Ask questions like "What's the weather?" or "Latest news about AI"
+- **Memory**: Tell it facts to remember, and it will recall them later
+- **Image Generation**: Ask it to "draw a sunset" or "create an image of a cat"
+- **Web Browsing**: It can navigate websites, click, type, and read content for you
+
+---
 
 ## Approach
 
